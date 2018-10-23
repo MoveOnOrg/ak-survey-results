@@ -1,0 +1,6 @@
+.coverage
+*.pyc
+settings.py
+test_settings.py
+venv
+zappa_settings.json
