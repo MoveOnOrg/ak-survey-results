@@ -1,0 +1,24 @@
+{
+    "production": {
+        "apigateway_enabled": false,
+        "aws_region": "[PICK-A-REGION]",
+        "events": [{
+           "function": "process_surveys_that_need_updating",
+           "expression": "rate(15 minutes)",
+           "kwargs": {
+             "FUNCTION": "process_surveys_that_need_updating"
+           }
+        }],
+        "keep_warm": false,
+        "lambda_handler": "ak_survey_results.aws_lambda",
+        "profile_name": "default",
+        "project_name": "survey-results",
+        "role_name": "[PICK-A-ROLE]",
+        "runtime": "python3.6",
+        "s3_bucket": "[PICK-A-BUCKET]",
+        "vpc_config": {
+          "SubnetIds": [ "[PICK-A-SUBNET]" ],
+          "SecurityGroupIds": [ "[PICK-A-SECURITY-GROUP]" ]
+        },
+    }
+}
