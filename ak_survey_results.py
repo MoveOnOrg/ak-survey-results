@@ -186,7 +186,8 @@ class AKSurveyResults:
     def deduped_columns(self, columns):
         deduped_columns = []
         reserved_keywords = [
-            'union', 'permissions', 'select', 'else', 'when', 'where', 'order'
+            'union', 'permissions', 'select', 'else', 'when', 'where', 'order',
+            'primary'
         ]
         for column in columns:
             column_name = column
