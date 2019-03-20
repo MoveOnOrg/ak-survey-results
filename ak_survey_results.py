@@ -6,7 +6,7 @@ from json import dumps
 
 import psycopg2
 import psycopg2.extras
-from slugify import Slugify
+from slugify.main import Slugify
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
