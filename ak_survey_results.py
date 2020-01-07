@@ -287,7 +287,7 @@ class AKSurveyResults:
         insert_columns = ['action_id'] + column_names
         insert_values = []
         action_ids = []
-        for action_id, values in field_values.items():
+        for action_id, values in list(field_values.items()):
             insert_values.append(action_id)
             action_ids.append(action_id)
             for column in column_names:
@@ -311,7 +311,7 @@ class AKSurveyResults:
             """.join([
                 '(%s)' % ', '.join([
                     '%s' for column in insert_columns
-                ]) for row in field_values.keys()
+                ]) for row in list(field_values.keys())
             ])
         )
         self.database_cursor.execute(insert_query, insert_values)
@@ -420,7 +420,7 @@ class AKSurveyResults:
                         page_id,
                         self.field_values_by_action(
                             field_values,
-                            dict(zip(field_names, field_slugs)),
+                            dict(list(zip(field_names, field_slugs))),
                             action_ids
                         ),
                         field_slugs
@@ -488,9 +488,9 @@ class Struct:
 def main(args):
     ak = AKSurveyResults(args)
     print('running main')
-    print(args.__dict__.get('FUNCTION', ''), 'FUNCTION')
-    print(args.__dict__.get('PAGE_ID', ''), 'PAGE_ID')
-    print(args.__dict__.get('SINCE', ''), 'SINCE')
+    print((args.__dict__.get('FUNCTION', ''), 'FUNCTION'))
+    print((args.__dict__.get('PAGE_ID', ''), 'PAGE_ID'))
+    print((args.__dict__.get('SINCE', ''), 'SINCE'))
     if args.FUNCTION == 'survey_refresh_info':
         try:
             return ak.survey_refresh_info(args.PAGE_ID)
@@ -542,12 +542,12 @@ def aws_lambda(event, context):
     if kwargs:
         for argname in kwargs:
             event[argname] = kwargs.get(argname)
-    for argname, helptext in ARG_DEFINITIONS.items():
+    for argname, helptext in list(ARG_DEFINITIONS.items()):
         if not event.get(argname, False):
             event[argname] = getattr(settings, argname, False)
-    print(event.get('FUNCTION', ''), 'FUNCTION')
-    print(event.get('PAGE_ID', ''), 'PAGE_ID')
-    print(event.get('SINCE', ''), 'SINCE')
+    print((event.get('FUNCTION', ''), 'FUNCTION'))
+    print((event.get('PAGE_ID', ''), 'PAGE_ID'))
+    print((event.get('SINCE', ''), 'SINCE'))
     args = Struct(**event)
     return dumps(main(args), default=json_serial)
 
@@ -564,7 +564,7 @@ if __name__ == '__main__':
     )
     pp = pprint.PrettyPrinter(indent=2)
 
-    for argname, helptext in ARG_DEFINITIONS.items():
+    for argname, helptext in list(ARG_DEFINITIONS.items()):
         parser.add_argument(
             '--%s' % argname, dest=argname, help=helptext,
             default=getattr(settings, argname, False)
