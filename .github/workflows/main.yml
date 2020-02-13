@@ -1,0 +1,13 @@
+name: Install postgresql-devel
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - use: mstksg/get-package@v1
+      with:
+        apt-get: postgresql-devel
