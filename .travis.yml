@@ -18,7 +18,4 @@ install:
 script:
 - pytest
 after_success:
-- pip freeze
-- pip install -r requirements.txt
-- pip freeze
 - test $TRAVIS_BRANCH = "main" && zappa update
