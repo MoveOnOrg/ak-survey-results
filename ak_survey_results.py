@@ -442,7 +442,7 @@ class AKSurveyResults:
                     'reason': 'survey schema missing'
                 }
         else:
-            ak.update_pages_table_refresh(page_id, 'GETDATE()')
+            self.update_pages_table_refresh(page_id, 'GETDATE()')
 
     def process_surveys_that_need_updating(self, surveys, lambda_name=False):
         """
