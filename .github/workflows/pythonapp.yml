@@ -28,7 +28,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Load secrets
       run: |
-        openssl aes-256-cbc -pass "pass:${{ secrets.encpass }}" -d -in secrets.tar.enc -out secrets.tar
+        gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.encpass }}" --output secrets.tar secrets.tar.gpg
         tar xvf secrets.tar
     - name: Test with pytest
       run: |
