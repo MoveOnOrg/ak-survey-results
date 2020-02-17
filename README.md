@@ -28,6 +28,13 @@ Run `python ak_survey_results.py --help` or check `settings.py.example` to get c
 
 Run `cp zappa_settings.json.example zappa_settings.json` and set any "[PICK-A-VALUE]" values as needed for your environment. Lambda event options override settings.py. And because Zappa can't currently configure CloudWatch to pass in event options directly, event.kwargs options also get translated to event options.
 
+## GitHub Actions
+
+Secrets are added to the repo as an encrypted tar file. When updating credentials, you'll need to recreate this file:
+
+- `tar cvf secrets.tar zappa_settings.json settings.py test_settings.py`
+- `openssl aes-256-cbc -pass "pass:ACTUAL-PASSWORD-HERE" -in secrets.tar -out secrets.tar.enc`
+
 ## Tests
 
 To run tests:
