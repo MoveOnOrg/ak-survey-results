@@ -1,8 +1,9 @@
 name: Python test and deploy
 
-on: push
-  branches:
-    - main
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
