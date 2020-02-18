@@ -1,4 +1,4 @@
-name: Python test onlys
+name: Python test only
 
 on:
   pull_request:
