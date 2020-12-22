@@ -1,4 +1,4 @@
 awesome-slugify==1.6.5
-boto3==1.12.1
+boto3==1.16.41
 psycopg2-binary==2.8.4
 zappa==0.49.0
