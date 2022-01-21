@@ -15,6 +15,7 @@ ARG_DEFINITIONS = {
     'DB_NAME': 'Database name',
     'DB_SCHEMA_AK': 'Database schema for ActionKit tables',
     'DB_SCHEMA_SURVEY': 'Database schema for survey results tables',
+    'DB_VARCHAR_COL': 'VARCHAR column type and length. VARCHAR on Postgres, VARCHAR(MAX) on Redshift',
     'FUNCTION': ('Function to call, e.g. '
                  'survey_refresh_info, process_recent_actions_for_survey'),
     'PAGE_ID': ('Survey page ID for survey_refresh_info, '
@@ -30,7 +31,6 @@ REQUIRED_ARGS = [
 ]
 
 settings = get_settings(ARG_DEFINITIONS, 'ak-survey-results')
-
 
 class PageNotFoundException(Exception):
     '''Raise this when requested page is not found'''
@@ -260,7 +260,7 @@ class AKSurveyResults:
         DROP TABLE IF EXISTS %s.page_%d
         """ % (self.settings['DB_SCHEMA_SURVEY'], int(page_id))
         self.database_cursor.execute(drop_query)
-        create_columns = ['%s VARCHAR(MAX)' % column for column in column_list]
+        create_columns = ['%s %s' % (column, self.settings['DB_VARCHAR_COL']) for column in column_list]
         create_columns.insert(0, 'action_id INTEGER')
         create_query = """
         CREATE TABLE %s.page_%d (%s)
