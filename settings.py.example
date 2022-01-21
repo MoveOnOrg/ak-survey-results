@@ -9,6 +9,6 @@ settings = {
     'DB_VARCHAR_COL': '',
     'FUNCTION': 'survey_refresh_info',
     'PAGE_ID': 1,
-    'MINUTES': 60,
+    'SINCE': 60,
     'COLUMN_EXCLUDES': ''
 }

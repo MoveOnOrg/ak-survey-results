@@ -27,7 +27,7 @@ ARG_DEFINITIONS = {
 }
 
 REQUIRED_ARGS = [
-    'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PWD', 'DB_NAME', 'FUNCTION'
+    'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_VARCHAR_COL', 'FUNCTION'
 ]
 
 settings = get_settings(ARG_DEFINITIONS, 'ak-survey-results')
