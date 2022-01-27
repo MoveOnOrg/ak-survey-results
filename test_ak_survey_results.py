@@ -23,7 +23,7 @@ class Test:
             last_refresh TIMESTAMP,
             column_list %s
         )
-        """ % (settings['DB_SCHEMA_SURVEY'], settings['DB_VARCHAR_COL'])
+        """ % (settings['DB_SCHEMA_SURVEY'], self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(create_pages_table_query)
 
         create_ak_schema_query = """
@@ -55,7 +55,7 @@ class Test:
             name VARCHAR(765),
             value %s
         )
-        """ % (settings['DB_SCHEMA_AK'], settings['DB_VARCHAR_COL'])
+        """ % (settings['DB_SCHEMA_AK'], self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(
             create_actionfield_table_query
         )
@@ -91,7 +91,7 @@ class Test:
             action_id INTEGER,
             processed %s
         )
-        """ % (settings['DB_SCHEMA_SURVEY'], settings['DB_VARCHAR_COL'])
+        """ % (settings['DB_SCHEMA_SURVEY'], self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(create_page_query)
 
         process_page_query = """
