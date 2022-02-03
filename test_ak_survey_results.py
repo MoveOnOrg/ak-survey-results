@@ -1,34 +1,34 @@
 import pytest
-from test_settings import settings
+import test_settings
 from ak_survey_results import AKSurveyResults
 from ak_survey_results import PageNotFoundException
 from ak_survey_results import PageNotSurveyException
 from ak_survey_results import PageNotLoadedException
 from ak_survey_results import Struct
 
+
 class Test:
 
     def setup(self):
-
-        self.survey_results = AKSurveyResults(settings)
+        self.survey_results = AKSurveyResults(test_settings)
 
         create_survey_schema_query = """
         CREATE SCHEMA %s
-        """ % settings['DB_SCHEMA_SURVEY']
+        """ % test_settings.DB_SCHEMA_SURVEY
         self.survey_results.database_cursor.execute(create_survey_schema_query)
 
         create_pages_table_query = """
         CREATE TABLE %s.pages (
             page_id INTEGER,
             last_refresh TIMESTAMP,
-            column_list %s
+            column_list VARCHAR(MAX)
         )
-        """ % (settings['DB_SCHEMA_SURVEY'], self.survey_results.varchar_col_type)
+        """ % test_settings.DB_SCHEMA_SURVEY
         self.survey_results.database_cursor.execute(create_pages_table_query)
 
         create_ak_schema_query = """
         CREATE SCHEMA %s
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(create_ak_schema_query)
 
         create_page_table_query = """
@@ -36,7 +36,7 @@ class Test:
             id INTEGER,
             type VARCHAR(765)
         )
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(create_page_table_query)
 
         create_action_table_query = """
@@ -45,7 +45,7 @@ class Test:
             page_id INTEGER,
             created_at TIMESTAMP
         )
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(create_action_table_query)
 
         create_actionfield_table_query = """
@@ -53,9 +53,9 @@ class Test:
             id INTEGER,
             parent_id INTEGER,
             name VARCHAR(765),
-            value %s
+            value VARCHAR(MAX)
         )
-        """ % (settings['DB_SCHEMA_AK'], self.survey_results.varchar_col_type)
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(
             create_actionfield_table_query
         )
@@ -65,7 +65,7 @@ class Test:
         VALUES
         (1, 'Donation'), (2, 'Survey'),
         (3, 'Survey'), (4, 'Survey')
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(page_query)
 
         action_query = """
@@ -74,7 +74,7 @@ class Test:
         (1, 2, '2018-10-01 01:01:01'),
         (2, 3, '2018-10-05 01:01:01'),
         (3, 4, '2018-10-06 01:01:01')
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(action_query)
 
         actionfield_query = """
@@ -83,27 +83,27 @@ class Test:
         (1, 1, 'name', 'value'),
         (2, 2, 'another', 'a value'),
         (3, 3, 'processed', 'yes')
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(actionfield_query)
 
         create_page_query = """
         CREATE TABLE %s.page_4 (
             action_id INTEGER,
-            processed %s
+            processed VARCHAR(MAX)
         )
-        """ % (settings['DB_SCHEMA_SURVEY'], self.survey_results.varchar_col_type)
+        """ % test_settings.DB_SCHEMA_SURVEY
         self.survey_results.database_cursor.execute(create_page_query)
 
         process_page_query = """
         INSERT INTO %s.pages (page_id, last_refresh, column_list)
         VALUES (4, '2018-10-06 01:01:01', 'processed')
-        """ % settings['DB_SCHEMA_SURVEY']
+        """ % test_settings.DB_SCHEMA_SURVEY
         self.survey_results.database_cursor.execute(process_page_query)
 
         process_page_action_query = """
         INSERT INTO %s.page_4 (action_id, processed)
         VALUES (3, 'yes')
-        """ % settings['DB_SCHEMA_SURVEY']
+        """ % test_settings.DB_SCHEMA_SURVEY
         self.survey_results.database_cursor.execute(process_page_action_query)
 
         self.survey_results.database.commit()
@@ -165,11 +165,11 @@ class Test:
     def teardown(self):
         drop_survey_schema_query = """
         DROP SCHEMA %s CASCADE
-        """ % settings['DB_SCHEMA_SURVEY']
+        """ % test_settings.DB_SCHEMA_SURVEY
         self.survey_results.database_cursor.execute(drop_survey_schema_query)
 
         drop_ak_schema_query = """
         DROP SCHEMA %s CASCADE
-        """ % settings['DB_SCHEMA_AK']
+        """ % test_settings.DB_SCHEMA_AK
         self.survey_results.database_cursor.execute(drop_ak_schema_query)
         self.survey_results.database.commit()
