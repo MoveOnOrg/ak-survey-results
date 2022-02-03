@@ -1,19 +1,11 @@
 import boto3
 import datetime
-import os
-import sys
 from json import dumps
 
 import psycopg2
 import psycopg2.extras
 from slugify.main import Slugify
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-if os.path.exists(os.path.join(BASE_DIR, 'settings.py')):
-    import settings
-else:
-    settings = {}
+from pywell.entry_points import get_settings
 
 ARG_DEFINITIONS = {
     'DB_HOST': 'Database host IP or hostname',
@@ -33,9 +25,7 @@ ARG_DEFINITIONS = {
                'If not supplied, surveys are processed synchronously.')
 }
 
-REQUIRED_ARGS = [
-    'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PWD', 'DB_NAME', 'FUNCTION'
-]
+settings = get_settings(ARG_DEFINITIONS, 'ak-survey-results')
 
 
 class PageNotFoundException(Exception):
@@ -544,7 +534,7 @@ def aws_lambda(event, context):
             event[argname] = kwargs.get(argname)
     for argname, helptext in ARG_DEFINITIONS.items():
         if not event.get(argname, False):
-            event[argname] = getattr(settings, argname, False)
+            event[argname] = settings.get(argname, False)
     print(event.get('FUNCTION', ''), 'FUNCTION')
     print(event.get('PAGE_ID', ''), 'PAGE_ID')
     print(event.get('SINCE', ''), 'SINCE')
@@ -567,7 +557,7 @@ if __name__ == '__main__':
     for argname, helptext in ARG_DEFINITIONS.items():
         parser.add_argument(
             '--%s' % argname, dest=argname, help=helptext,
-            default=getattr(settings, argname, False)
+            default=settings.get(argname, False)
         )
 
     args = parser.parse_args()
