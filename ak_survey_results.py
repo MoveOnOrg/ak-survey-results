@@ -1,11 +1,19 @@
 import boto3
 import datetime
+import os
+import sys
 from json import dumps
 
 import psycopg2
 import psycopg2.extras
 from slugify.main import Slugify
-from pywell.entry_points import get_settings
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+if os.path.exists(os.path.join(BASE_DIR, 'settings.py')):
+    import settings
+else:
+    settings = {}
 
 ARG_DEFINITIONS = {
     'DB_HOST': 'Database host IP or hostname',
@@ -15,7 +23,6 @@ ARG_DEFINITIONS = {
     'DB_NAME': 'Database name',
     'DB_SCHEMA_AK': 'Database schema for ActionKit tables',
     'DB_SCHEMA_SURVEY': 'Database schema for survey results tables',
-    'DB_TYPE': 'Database type: PostgreSQL or Redshift',
     'FUNCTION': ('Function to call, e.g. '
                  'survey_refresh_info, process_recent_actions_for_survey'),
     'PAGE_ID': ('Survey page ID for survey_refresh_info, '
@@ -26,7 +33,10 @@ ARG_DEFINITIONS = {
                'If not supplied, surveys are processed synchronously.')
 }
 
-settings = get_settings(ARG_DEFINITIONS, 'ak-survey-results')
+REQUIRED_ARGS = [
+    'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PWD', 'DB_NAME', 'FUNCTION'
+]
+
 
 class PageNotFoundException(Exception):
     '''Raise this when requested page is not found'''
@@ -39,8 +49,6 @@ class PageNotSurveyException(Exception):
 class PageNotLoadedException(Exception):
     '''Raise this when requested page is not yet loaded'''
 
-class InvalidDbTypeException(Exception):
-    '''Raise this when the specified database type is not handled'''
 
 class AKSurveyResults:
 
@@ -50,24 +58,17 @@ class AKSurveyResults:
         """
         self.settings = settings
         self.database = psycopg2.connect(
-            host=self.settings['DB_HOST'],
-            port=self.settings['DB_PORT'],
-            user=self.settings['DB_USER'],
-            password=self.settings['DB_PASS'],
-            database=self.settings['DB_NAME']
+            host=self.settings.DB_HOST,
+            port=self.settings.DB_PORT,
+            user=self.settings.DB_USER,
+            password=self.settings.DB_PASS,
+            database=self.settings.DB_NAME
         )
         self.database_cursor = self.database.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor
         )
         self.custom_slugify = Slugify(to_lower=True)
         self.custom_slugify.separator = '_'
-        self.varchar_col_type = ''
-        if self.settings['DB_TYPE'].lower() == 'redshift':
-            self.varchar_col_type = 'VARCHAR(MAX)'
-        elif self.settings['DB_TYPE'].lower() == 'postgresql':
-            self.varchar_col_type = 'VARCHAR'
-        else:
-            raise InvalidDbTypeException('Database type %s not found.' % self.settings['DB_TYPE'])
 
     def survey_refresh_info(self, page_id):
         """
@@ -85,9 +86,9 @@ class AKSurveyResults:
         WHERE p.id = %d
         GROUP BY 1,2,3,4
         """ % (
-            self.settings['DB_SCHEMA_AK'],
-            self.settings['DB_SCHEMA_SURVEY'],
-            self.settings['DB_SCHEMA_AK'],
+            self.settings.DB_SCHEMA_AK,
+            self.settings.DB_SCHEMA_SURVEY,
+            self.settings.DB_SCHEMA_AK,
             int(page_id)
         )
         self.database_cursor.execute(survey_info_query)
@@ -108,7 +109,7 @@ class AKSurveyResults:
         SELECT COUNT(pa.action_id) AS saved_count
         FROM %s.page_%d pa
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             int(page_id)
         )
         self.database_cursor.execute(saved_count_query)
@@ -129,7 +130,7 @@ class AKSurveyResults:
         ORDER BY a.created_at ASC
         LIMIT 10000
         """ % (
-            self.settings['DB_SCHEMA_AK'],
+            self.settings.DB_SCHEMA_AK,
             int(page_id),
             since
         )
@@ -151,14 +152,14 @@ class AKSurveyResults:
         """
         Get all field values for given list of action IDs.
         """
-        excludes = self.settings['COLUMN_EXCLUDES'].split(',')
+        excludes = self.settings.COLUMN_EXCLUDES.split(',')
         values_query = """
         SELECT af.parent_id AS action_id, af.name, af.value
         FROM %s.core_actionfield af
         WHERE af.parent_id IN (%s)
         AND NOT af.name = ANY(%s)
         """ % (
-            self.settings['DB_SCHEMA_AK'],
+            self.settings.DB_SCHEMA_AK,
             ', '.join([str(id) for id in action_ids]),
             '%s'
         )
@@ -238,7 +239,7 @@ class AKSurveyResults:
         """
         Full column list for given survey page_id.
         """
-        excludes = self.settings['COLUMN_EXCLUDES'].split(',')
+        excludes = self.settings.COLUMN_EXCLUDES.split(',')
         column_query = """
         SELECT DISTINCT af.name
         FROM %s.core_actionfield af
@@ -246,8 +247,8 @@ class AKSurveyResults:
         WHERE a.page_id = %d
         AND NOT af.name = ANY(%s)
         """ % (
-            self.settings['DB_SCHEMA_AK'],
-            self.settings['DB_SCHEMA_AK'],
+            self.settings.DB_SCHEMA_AK,
+            self.settings.DB_SCHEMA_AK,
             int(page_id),
             '%s'
         )
@@ -263,14 +264,14 @@ class AKSurveyResults:
         """
         drop_query = """
         DROP TABLE IF EXISTS %s.page_%d
-        """ % (self.settings['DB_SCHEMA_SURVEY'], int(page_id))
+        """ % (self.settings.DB_SCHEMA_SURVEY, int(page_id))
         self.database_cursor.execute(drop_query)
-        create_columns = ['%s %s' % (column, self.varchar_col_type) for column in column_list]
+        create_columns = ['%s VARCHAR(MAX)' % column for column in column_list]
         create_columns.insert(0, 'action_id INTEGER')
         create_query = """
         CREATE TABLE %s.page_%d (%s)
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             int(page_id),
             ', '.join(create_columns)
         )
@@ -294,7 +295,7 @@ class AKSurveyResults:
         delete_query = """
         DELETE FROM %s.page_%d WHERE action_id = ANY(%s)
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             int(page_id),
             '%s'
         )
@@ -303,7 +304,7 @@ class AKSurveyResults:
         insert_query = """
         INSERT INTO %s.page_%d (%s) VALUES %s
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             int(page_id),
             ', '.join(insert_columns),
             """,
@@ -326,7 +327,7 @@ class AKSurveyResults:
         VALUES
         (%d, '%s', '1900-01-01 00:00:00')
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             int(page_id),
             ','.join(column_list)
         )
@@ -341,7 +342,7 @@ class AKSurveyResults:
         DELETE FROM %s.pages
         WHERE page_id = %d
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             int(page_id)
         )
         self.database_cursor.execute(delete_query)
@@ -358,7 +359,7 @@ class AKSurveyResults:
         SET last_refresh = %s
         WHERE page_id = %d
         """ % (
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_SURVEY,
             last_refresh,
             int(page_id)
         )
@@ -386,9 +387,9 @@ class AKSurveyResults:
         ORDER BY p.id DESC
         LIMIT %d
         """ % (
-            self.settings['DB_SCHEMA_AK'],
-            self.settings['DB_SCHEMA_AK'],
-            self.settings['DB_SCHEMA_SURVEY'],
+            self.settings.DB_SCHEMA_AK,
+            self.settings.DB_SCHEMA_AK,
+            self.settings.DB_SCHEMA_SURVEY,
             count
         )
         self.database_cursor.execute(needs_update_query)
@@ -543,7 +544,7 @@ def aws_lambda(event, context):
             event[argname] = kwargs.get(argname)
     for argname, helptext in ARG_DEFINITIONS.items():
         if not event.get(argname, False):
-            event[argname] = settings.get(argname, False)
+            event[argname] = getattr(settings, argname, False)
     print(event.get('FUNCTION', ''), 'FUNCTION')
     print(event.get('PAGE_ID', ''), 'PAGE_ID')
     print(event.get('SINCE', ''), 'SINCE')
@@ -566,7 +567,7 @@ if __name__ == '__main__':
     for argname, helptext in ARG_DEFINITIONS.items():
         parser.add_argument(
             '--%s' % argname, dest=argname, help=helptext,
-            default=settings.get(argname, False)
+            default=getattr(settings, argname, False)
         )
 
     args = parser.parse_args()
