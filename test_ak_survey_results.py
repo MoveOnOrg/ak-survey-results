@@ -21,9 +21,9 @@ class Test:
         CREATE TABLE %s.pages (
             page_id INTEGER,
             last_refresh TIMESTAMP,
-            column_list VARCHAR(MAX)
+            column_list %s
         )
-        """ % test_settings.DB_SCHEMA_SURVEY
+        """ % (test_settings.DB_SCHEMA_SURVEY, self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(create_pages_table_query)
 
         create_ak_schema_query = """
@@ -53,9 +53,9 @@ class Test:
             id INTEGER,
             parent_id INTEGER,
             name VARCHAR(765),
-            value VARCHAR(MAX)
+            value %s
         )
-        """ % test_settings.DB_SCHEMA_AK
+        """ % (test_settings.DB_SCHEMA_AK, self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(
             create_actionfield_table_query
         )
@@ -89,9 +89,9 @@ class Test:
         create_page_query = """
         CREATE TABLE %s.page_4 (
             action_id INTEGER,
-            processed VARCHAR(MAX)
+            processed %s
         )
-        """ % test_settings.DB_SCHEMA_SURVEY
+        """ % (test_settings.DB_SCHEMA_SURVEY, self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(create_page_query)
 
         process_page_query = """

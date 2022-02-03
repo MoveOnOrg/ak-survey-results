@@ -5,6 +5,7 @@ DB_PASS = ''
 DB_NAME = ''
 DB_SCHEMA_AK = 'ak'
 DB_SCHEMA_SURVEY = 'survey_results'
+DB_TYPE = ''
 FUNCTION = 'survey_refresh_info'
 PAGE_ID = 1
 MINUTES = 60

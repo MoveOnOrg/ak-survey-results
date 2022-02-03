@@ -15,6 +15,7 @@ ARG_DEFINITIONS = {
     'DB_NAME': 'Database name',
     'DB_SCHEMA_AK': 'Database schema for ActionKit tables',
     'DB_SCHEMA_SURVEY': 'Database schema for survey results tables',
+    'DB_TYPE': 'Database type: PostgreSQL or Redshift',
     'FUNCTION': ('Function to call, e.g. '
                  'survey_refresh_info, process_recent_actions_for_survey'),
     'PAGE_ID': ('Survey page ID for survey_refresh_info, '
@@ -40,6 +41,10 @@ class PageNotLoadedException(Exception):
     '''Raise this when requested page is not yet loaded'''
 
 
+class InvalidDbTypeException(Exception):
+    '''Raise this when the specified database type is not handled'''
+
+
 class AKSurveyResults:
 
     def __init__(self, settings):
@@ -59,6 +64,14 @@ class AKSurveyResults:
         )
         self.custom_slugify = Slugify(to_lower=True)
         self.custom_slugify.separator = '_'
+        self.varchar_col_type = ''
+        if self.settings.DB_TYPE.lower() == 'redshift':
+            self.varchar_col_type = 'VARCHAR(MAX)'
+        elif self.settings.DB_TYPE.lower() == 'postgresql':
+            self.varchar_col_type = 'VARCHAR'
+        else:
+            raise InvalidDbTypeException('Database type %s not found.'
+                                         % self.settings.DB_TYPE)
 
     def survey_refresh_info(self, page_id):
         """
@@ -256,7 +269,8 @@ class AKSurveyResults:
         DROP TABLE IF EXISTS %s.page_%d
         """ % (self.settings.DB_SCHEMA_SURVEY, int(page_id))
         self.database_cursor.execute(drop_query)
-        create_columns = ['%s VARCHAR(MAX)' % column for column in column_list]
+        create_columns = ['%s %s' % (column, self.varchar_col_type)
+                          for column in column_list]
         create_columns.insert(0, 'action_id INTEGER')
         create_query = """
         CREATE TABLE %s.page_%d (%s)
