@@ -16,9 +16,9 @@ This is designed to handle failure gracefully. If processing of a survey fails, 
 
 ActionKit tables can be in a separate schema, but currently must be accessible within the same database connection.
 
-## settings.py
+## Settings
 
-Run `cp settings.py.example settings.py` and fill in any values needed for your environment.
+Settings are fetched directly from AWS Secrets Manager using the secret name `ak-survey-results`. 
 
 ## Command line usage
 

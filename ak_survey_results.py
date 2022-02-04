@@ -1,19 +1,11 @@
 import boto3
 import datetime
-import os
-import sys
 from json import dumps
 
 import psycopg2
 import psycopg2.extras
 from slugify.main import Slugify
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-if os.path.exists(os.path.join(BASE_DIR, 'settings.py')):
-    import settings
-else:
-    settings = {}
+from pywell.entry_points import get_settings
 
 ARG_DEFINITIONS = {
     'DB_HOST': 'Database host IP or hostname',
@@ -23,6 +15,7 @@ ARG_DEFINITIONS = {
     'DB_NAME': 'Database name',
     'DB_SCHEMA_AK': 'Database schema for ActionKit tables',
     'DB_SCHEMA_SURVEY': 'Database schema for survey results tables',
+    'DB_TYPE': 'Database type: PostgreSQL or Redshift',
     'FUNCTION': ('Function to call, e.g. '
                  'survey_refresh_info, process_recent_actions_for_survey'),
     'PAGE_ID': ('Survey page ID for survey_refresh_info, '
@@ -33,9 +26,7 @@ ARG_DEFINITIONS = {
                'If not supplied, surveys are processed synchronously.')
 }
 
-REQUIRED_ARGS = [
-    'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PWD', 'DB_NAME', 'FUNCTION'
-]
+settings = get_settings(ARG_DEFINITIONS, 'ak-survey-results')
 
 
 class PageNotFoundException(Exception):
@@ -48,6 +39,10 @@ class PageNotSurveyException(Exception):
 
 class PageNotLoadedException(Exception):
     '''Raise this when requested page is not yet loaded'''
+
+
+class InvalidDbTypeException(Exception):
+    '''Raise this when the specified database type is not handled'''
 
 
 class AKSurveyResults:
@@ -69,6 +64,14 @@ class AKSurveyResults:
         )
         self.custom_slugify = Slugify(to_lower=True)
         self.custom_slugify.separator = '_'
+        self.varchar_col_type = ''
+        if self.settings.DB_TYPE.lower() == 'redshift':
+            self.varchar_col_type = 'VARCHAR(MAX)'
+        elif self.settings.DB_TYPE.lower() == 'postgresql':
+            self.varchar_col_type = 'VARCHAR'
+        else:
+            raise InvalidDbTypeException('Database type %s not found.'
+                                         % self.settings.DB_TYPE)
 
     def survey_refresh_info(self, page_id):
         """
@@ -266,7 +269,8 @@ class AKSurveyResults:
         DROP TABLE IF EXISTS %s.page_%d
         """ % (self.settings.DB_SCHEMA_SURVEY, int(page_id))
         self.database_cursor.execute(drop_query)
-        create_columns = ['%s VARCHAR(MAX)' % column for column in column_list]
+        create_columns = ['%s %s' % (column, self.varchar_col_type)
+                          for column in column_list]
         create_columns.insert(0, 'action_id INTEGER')
         create_query = """
         CREATE TABLE %s.page_%d (%s)
@@ -544,7 +548,7 @@ def aws_lambda(event, context):
             event[argname] = kwargs.get(argname)
     for argname, helptext in ARG_DEFINITIONS.items():
         if not event.get(argname, False):
-            event[argname] = getattr(settings, argname, False)
+            event[argname] = settings.get(argname, False)
     print(event.get('FUNCTION', ''), 'FUNCTION')
     print(event.get('PAGE_ID', ''), 'PAGE_ID')
     print(event.get('SINCE', ''), 'SINCE')
@@ -567,7 +571,7 @@ if __name__ == '__main__':
     for argname, helptext in ARG_DEFINITIONS.items():
         parser.add_argument(
             '--%s' % argname, dest=argname, help=helptext,
-            default=getattr(settings, argname, False)
+            default=settings.get(argname, False)
         )
 
     args = parser.parse_args()
