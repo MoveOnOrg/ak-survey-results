@@ -6,13 +6,9 @@ import psycopg2
 import psycopg2.extras
 from slugify.main import Slugify
 from pywell.entry_points import get_settings
+from pywell.secrets_manager import get_secret
 
 ARG_DEFINITIONS = {
-    'DB_HOST': 'Database host IP or hostname',
-    'DB_PORT': 'Database port number',
-    'DB_USER': 'Database user',
-    'DB_PASS': 'Database password',
-    'DB_NAME': 'Database name',
     'DB_SCHEMA_AK': 'Database schema for ActionKit tables',
     'DB_SCHEMA_SURVEY': 'Database schema for survey results tables',
     'DB_TYPE': 'Database type: PostgreSQL or Redshift',
@@ -51,13 +47,14 @@ class AKSurveyResults:
         """
         Initialize settings.
         """
+        db_settings = get_secret('redshift-admin')
         self.settings = settings
         self.database = psycopg2.connect(
-            host=self.settings.DB_HOST,
-            port=self.settings.DB_PORT,
-            user=self.settings.DB_USER,
-            password=self.settings.DB_PASS,
-            database=self.settings.DB_NAME
+            host=db_settings['host'],
+            port=db_settings['port'],
+            user=db_settings['username'],
+            password=db_settings['password'],
+            database='dev'
         )
         self.database_cursor = self.database.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor
