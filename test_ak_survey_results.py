@@ -1,16 +1,40 @@
 import pytest
 import test_settings
-from ak_survey_results import AKSurveyResults
+import boto3
+from moto import mock_secretsmanager
 from ak_survey_results import PageNotFoundException
 from ak_survey_results import PageNotSurveyException
 from ak_survey_results import PageNotLoadedException
 from ak_survey_results import Struct
 
 
+mock_secret = {'DB_SCHEMA_AK': 'ak', 'DB_SCHEMA_SURVEY': 'survey_results', 'DB_TYPE': 'PostgreSQL', 'COLUMN_EXCLUDES': ''}
+redshift_secret={'username':'mock_admin_username','password':'mock_admin_password','host':'localhost','port':'5432'}
+
+class ArgsObject:
+    def __init__(self, dict_args):
+        for arg, val in dict_args:
+            setattr(self, arg, val)
+
+@mock_secretsmanager
+def init_secrets():
+    client = boto3.client('secretsmanager')
+    client.create_secret(Name='ak-survey-results', SecretString=json.dumps(mock_secret))
+    client.create_secret(Name='redshift-admin', SecretString=json.dumps(redshift_secret))
+
+
+@mock_secretsmanager
 class Test:
 
     def setup(self):
-        self.survey_results = AKSurveyResults(test_settings)
+       init_secrets()
+       args = get_secret('ak-survey-results')
+       args['FUNCTION']='survey_refresh_info'
+       args['PAGE_ID']=1
+       args['SINCE']=60
+
+       from ak_survey_results import AKSurveyResults
+       self.survey_results = AKSurveyResults(ArgsObject(args))
 
         create_survey_schema_query = """
         CREATE SCHEMA %s

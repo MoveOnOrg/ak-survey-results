@@ -3,3 +3,4 @@ boto3==1.17.28
 psycopg2-binary==2.9.5
 zappa>=0.54.0
 git+https://github.com/moveonorg/pywell@main#egg=pywell
+moto[secretsmanager]==4.0.9
