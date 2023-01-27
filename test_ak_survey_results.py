@@ -1,7 +1,8 @@
 import pytest
-import test_settings
 import boto3
+import json
 from moto import mock_secretsmanager
+from pywell.secrets_manager import get_secret
 from ak_survey_results import PageNotFoundException
 from ak_survey_results import PageNotSurveyException
 from ak_survey_results import PageNotLoadedException
@@ -13,7 +14,7 @@ redshift_secret={'username':'mock_admin_username','password':'mock_admin_passwor
 
 class ArgsObject:
     def __init__(self, dict_args):
-        for arg, val in dict_args:
+        for arg, val in dict_args.items():
             setattr(self, arg, val)
 
 @mock_secretsmanager
@@ -26,15 +27,15 @@ def init_secrets():
 @mock_secretsmanager
 class Test:
 
-    def setup(self):
-       init_secrets()
-       args = get_secret('ak-survey-results')
-       args['FUNCTION']='survey_refresh_info'
-       args['PAGE_ID']=1
-       args['SINCE']=60
+    def setup_method(self, method):
+        init_secrets()
+        args = get_secret('ak-survey-results')
+        args['FUNCTION']='survey_refresh_info'
+        args['PAGE_ID']=1
+        args['SINCE']=60
 
-       from ak_survey_results import AKSurveyResults
-       self.survey_results = AKSurveyResults(ArgsObject(args))
+        from ak_survey_results import AKSurveyResults
+        self.survey_results = AKSurveyResults(ArgsObject(args))
 
         create_survey_schema_query = """
         CREATE SCHEMA %s
@@ -186,7 +187,7 @@ class Test:
         surveys_after = self.survey_results.surveys_that_need_updating(10)
         assert surveys_after == []
 
-    def teardown(self):
+    def teardown_method(self, method):
         drop_survey_schema_query = """
         DROP SCHEMA %s CASCADE
         """ % test_settings.DB_SCHEMA_SURVEY
