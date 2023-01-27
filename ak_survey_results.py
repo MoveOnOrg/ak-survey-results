@@ -54,7 +54,7 @@ class AKSurveyResults:
             port=db_settings['port'],
             user=db_settings['username'],
             password=db_settings['password'],
-            database='dev'
+            database=db_settings['dbName']
         )
         self.database_cursor = self.database.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor
