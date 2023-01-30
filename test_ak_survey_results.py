@@ -3,10 +3,6 @@ import boto3
 import json
 from moto import mock_secretsmanager
 from pywell.secrets_manager import get_secret
-from ak_survey_results import PageNotFoundException
-from ak_survey_results import PageNotSurveyException
-from ak_survey_results import PageNotLoadedException
-from ak_survey_results import Struct
 
 
 mock_secret = {'DB_SCHEMA_AK': 'ak', 'DB_SCHEMA_SURVEY': 'survey_results', 'DB_TYPE': 'PostgreSQL', 'COLUMN_EXCLUDES': ''}
@@ -143,6 +139,9 @@ class Test:
         assert sluggified_names == assert_names
 
     def test_survey_refresh_info(self):
+        from ak_survey_results import PageNotFoundException
+        from ak_survey_results import PageNotSurveyException
+        from ak_survey_results import PageNotLoadedException
         with pytest.raises(PageNotFoundException) as e:
             self.survey_results.survey_refresh_info(0)
         with pytest.raises(PageNotSurveyException) as e:
