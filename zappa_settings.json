@@ -1,0 +1,25 @@
+{
+    "production": {
+        "apigateway_enabled": false,
+        "aws_region": "us-west-1",
+        "events": [{
+        "function": "process_surveys_that_need_updating",
+        "expression": "rate(10 minutes)",
+        "kwargs": {
+            "FUNCTION": "process_surveys_that_need_updating"
+        }
+        }],
+        "keep_warm": false,
+        "lambda_handler": "ak_survey_results.aws_lambda",
+        "profile_name": "default",
+        "project_name": "survey-results",
+        "role_name": "test_python",
+        "runtime": "python3.10",
+        "s3_bucket": "zappa-survey-results",
+        "timeout_seconds": 60,
+        "vpc_config": {
+            "SubnetIds": [ "subnet-d8385681" ],
+            "SecurityGroupIds": [ "sg-c2ee0da5" ]
+        },
+    }
+}
