@@ -16,7 +16,7 @@
         "role_name": "test_python",
         "runtime": "python3.10",
         "s3_bucket": "zappa-survey-results",
-        "timeout_seconds": 60,
+        "timeout_seconds": 300,
         "vpc_config": {
             "SubnetIds": [ "subnet-d8385681" ],
             "SecurityGroupIds": [ "sg-c2ee0da5" ]
