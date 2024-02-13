@@ -112,7 +112,11 @@ class AKSurveyResults:
             self.settings.DB_SCHEMA_SURVEY,
             int(page_id)
         )
-        self.database_cursor.execute(saved_count_query)
+        try:
+            self.database_cursor.execute(saved_count_query)
+        except psycopg2.errors.UndefinedTable as e:
+            self.database.rollback()
+            raise PageNotLoadedException from e
         saved_count_result = list(self.database_cursor.fetchall())
         result['saved_count'] = saved_count_result[0].get('saved_count', 0)
         return result
