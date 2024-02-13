@@ -115,17 +115,12 @@ class Test:
         """ % (self.args['DB_SCHEMA_SURVEY'], self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(create_page_query)
 
-        process_page_query_1 = """
+        process_page_query = """
         INSERT INTO %s.pages (page_id, last_refresh, column_list)
-        VALUES (4, '2018-10-06 01:01:01', 'processed')
+        VALUES (4, '2018-10-06 01:01:01', 'processed'),
+        (5, '2018-10-06 01:01:01', 'processed')
         """ % self.args['DB_SCHEMA_SURVEY']
-        self.survey_results.database_cursor.execute(process_page_query_1)
-
-        process_page_query_2 = """
-        INSERT INTO %s.pages (page_id, last_refresh, column_list)
-        VALUES (5, '2018-10-06 01:01:01', 'processed')
-        """ % self.args['DB_SCHEMA_SURVEY']
-        self.survey_results.database_cursor.execute(process_page_query_2)
+        self.survey_results.database_cursor.execute(process_page_query)
 
         process_page_action_query = """
         INSERT INTO %s.page_4 (action_id, processed)
