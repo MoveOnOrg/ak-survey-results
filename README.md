@@ -30,9 +30,11 @@ Run `cp zappa_settings.json.example zappa_settings.json` and set any "[PICK-A-VA
 
 ## Tests
 
-To run tests:
+Grant necessary local PostgreSQL permissions:
+- `psql -h localhost -U <superuser> -d postgres`
+- `GRANT CREATE ON DATABASE postgres TO postgres;`
 
-- `cp settings.py.example test_settings.py` and fill in values. *Note*: in the test context, `DB_SCHEMA_AK` and `DB_SCHEMA_SURVEY` will be created and destroyed, so should not refer to existing schemas.
+Run tests:
 - `pip install -U pytest`
 - `pytest`
 

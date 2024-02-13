@@ -85,7 +85,7 @@ class Test:
         INSERT INTO %s.core_page (id, type)
         VALUES
         (1, 'Donation'), (2, 'Survey'),
-        (3, 'Survey'), (4, 'Survey')
+        (3, 'Survey'), (4, 'Survey'), (5, 'Survey')
         """ % self.args['DB_SCHEMA_AK']
         self.survey_results.database_cursor.execute(page_query)
 
@@ -115,11 +115,17 @@ class Test:
         """ % (self.args['DB_SCHEMA_SURVEY'], self.survey_results.varchar_col_type)
         self.survey_results.database_cursor.execute(create_page_query)
 
-        process_page_query = """
+        process_page_query_1 = """
         INSERT INTO %s.pages (page_id, last_refresh, column_list)
         VALUES (4, '2018-10-06 01:01:01', 'processed')
         """ % self.args['DB_SCHEMA_SURVEY']
-        self.survey_results.database_cursor.execute(process_page_query)
+        self.survey_results.database_cursor.execute(process_page_query_1)
+
+        process_page_query_2 = """
+        INSERT INTO %s.pages (page_id, last_refresh, column_list)
+        VALUES (5, '2018-10-06 01:01:01', 'processed')
+        """ % self.args['DB_SCHEMA_SURVEY']
+        self.survey_results.database_cursor.execute(process_page_query_2)
 
         process_page_action_query = """
         INSERT INTO %s.page_4 (action_id, processed)
@@ -148,6 +154,8 @@ class Test:
             self.survey_results.survey_refresh_info(1)
         with pytest.raises(PageNotLoadedException) as e:
             self.survey_results.survey_refresh_info(2)
+        with pytest.raises(PageNotLoadedException):
+            self.survey_results.survey_refresh_info(5)
         results = self.survey_results.survey_refresh_info(4)
         assert results.get('action_count', 0) == 1
         assert results.get('saved_count', 0) == 1
