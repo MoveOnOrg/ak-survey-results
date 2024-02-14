@@ -511,13 +511,8 @@ def main(args):
                 'error': str(e)
             }
     elif args.FUNCTION == 'process_surveys_that_need_updating':
-        try:
-            surveys = ak.surveys_that_need_updating(15)
-            return ak.process_surveys_that_need_updating(surveys, args.LAMBDA)
-        except Exception as e:
-            return {
-                'error': str(e)
-            }
+        surveys = ak.surveys_that_need_updating(15)
+        return ak.process_surveys_that_need_updating(surveys, args.LAMBDA)
     elif args.FUNCTION == 'process_recent_actions_for_survey':
         try:
             return ak.process_recent_actions_for_survey(
