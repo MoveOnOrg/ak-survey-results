@@ -2,6 +2,6 @@ awesome-slugify==1.6.5
 boto3==1.17.28
 psycopg2-binary==2.9.5
 zappa>=0.54.0
-git+https://github.com/moveonorg/pywell@main#egg=pywell
+mo-pywell==1.1.0
 moto[secretsmanager]==4.0.9
 pytest
