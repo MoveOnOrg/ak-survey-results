@@ -497,37 +497,14 @@ def main(args):
     print(args.__dict__.get('PAGE_ID', ''), 'PAGE_ID')
     print(args.__dict__.get('SINCE', ''), 'SINCE')
     if args.FUNCTION == 'survey_refresh_info':
-        try:
-            return ak.survey_refresh_info(args.PAGE_ID)
-        except Exception as e:
-            return {
-                'error': str(e)
-            }
+        return ak.survey_refresh_info(args.PAGE_ID)
     elif args.FUNCTION == 'surveys_that_need_updating':
-        try:
-            return ak.surveys_that_need_updating(15)
-        except Exception as e:
-            return {
-                'error': str(e)
-            }
+        return ak.surveys_that_need_updating(15)
     elif args.FUNCTION == 'process_surveys_that_need_updating':
-        try:
-            surveys = ak.surveys_that_need_updating(15)
-            return ak.process_surveys_that_need_updating(surveys, args.LAMBDA)
-        except Exception as e:
-            return {
-                'error': str(e)
-            }
+        surveys = ak.surveys_that_need_updating(15)
+        return ak.process_surveys_that_need_updating(surveys, args.LAMBDA)
     elif args.FUNCTION == 'process_recent_actions_for_survey':
-        try:
-            return ak.process_recent_actions_for_survey(
-                args.PAGE_ID,
-                args.SINCE
-            )
-        except Exception as e:
-            return {
-                'error': str(e)
-            }
+        return ak.process_recent_actions_for_survey(args.PAGE_ID, args.SINCE)
     return False
 
 
