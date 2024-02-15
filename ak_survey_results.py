@@ -389,7 +389,7 @@ class AKSurveyResults:
         WHERE p.type = 'Survey'
           AND (sr.page_id IS NULL
                OR sr.last_refresh < a.created_at)
-        ORDER BY p.id DESC
+        ORDER BY since
         LIMIT %d
         """ % (
             self.settings.DB_SCHEMA_AK,
